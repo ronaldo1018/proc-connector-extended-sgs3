@@ -54,6 +54,8 @@ struct proc_event {
 		PROC_EVENT_GID  = 0x00000040,
 		PROC_EVENT_SID  = 0x00000080,
 		/* "next" should be 0x00000400 */
+		SCREEN_EVENT        = 0x00010000,
+		TIMER_TICK_EVENT    = 0x00020000,
 		/* "last" is the last process event: exit */
 		PROC_EVENT_EXIT = 0x80000000
 	} what;
@@ -100,6 +102,14 @@ struct proc_event {
 			__kernel_pid_t process_tgid;
 			__u32 exit_code, exit_signal;
 		} exit;
+
+		struct screen_event { // EVENTIMP
+			__u32 screen_on;
+		} screen;
+
+		struct timer_tick_event { // EVENTIMP
+			__u32 timer_no;
+		} timer;
 	} event_data;
 };
 
