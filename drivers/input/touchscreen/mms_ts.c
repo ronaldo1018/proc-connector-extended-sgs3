@@ -50,6 +50,17 @@
 
 #include <asm/unaligned.h>
 
+#include <linux/proc_fs.h> // EVENTIMP
+#include <linux/cn_proc.h> // EVENTIMP
+#define MMS_TS_PROCFS_NAME "mms_ts_touch_happen" // EVENTIMP
+static int touch_happen; // EVENTIMP
+static struct proc_dir_entry *entry_touch_happen; // EVENTIMP
+static int touch_happen_read(char *page, char **start, off_t off, int count, int *eof, void *data); // EVENTIMP
+static int touch_happen_write(struct file *file, const char __user *buffer, unsigned long count, void *data); // EVENTIMP
+static void init_touch_proc_fs(void); // EVENTIMP
+static void destroy_touch_proc_fs(void); // EVENTIMP
+
+
 #define MAX_FINGERS		10
 #define MAX_WIDTH		30
 #define MAX_PRESSURE		255
@@ -735,6 +746,11 @@ static irqreturn_t mms_ts_interrupt(int irq, void *dev_id)
 #if TOUCH_BOOSTER
 	set_dvfs_lock(info, !!touch_is_pressed);
 #endif
+	if(!touch_happen) // EVENTIMP
+	{
+		touch_happen = 1;
+		touch_connector();
+	}
 out:
 	return IRQ_HANDLED;
 }
@@ -3208,15 +3224,59 @@ static struct i2c_driver mms_ts_driver = {
 	.id_table = mms_ts_id,
 };
 
+static int touch_happen_read(char *page, char **start, off_t off, int count, int *eof, void *data) // EVENTIMP
+{
+	int len;
+	len = sprintf(page, "%d\n", touch_happen);
+	return len;
+}
+
+static int touch_happen_write(struct file *file, const char __user *buffer, unsigned long count, void *data) // EVENTIMP
+{
+	char buff;
+
+	// write data to buffer
+	if(copy_from_user(&buff, buffer, 1))
+	{
+		printk(KERN_INFO "%s: copy_from_user failed\n", MMS_TS_PROCFS_NAME);
+		return -EFAULT;
+	}
+
+	if(buff == '0')
+		touch_happen = 0;
+	else
+		touch_happen = 1;
+
+	return 1;
+}
+
+static void init_touch_proc_fs(void) // EVENTIMP
+{
+	touch_happen = 0;
+	entry_touch_happen = create_proc_entry(MMS_TS_PROCFS_NAME, 0644, NULL);
+	if(entry_touch_happen)
+	{
+		entry_touch_happen->read_proc = touch_happen_read;
+		entry_touch_happen->write_proc = touch_happen_write;
+	}
+}
+
+static void destroy_touch_proc_fs(void) // EVENTIMP
+{
+	touch_happen = 0;
+	remove_proc_entry(MMS_TS_PROCFS_NAME, NULL);
+}
+
 static int __init mms_ts_init(void)
 {
-
+	init_touch_proc_fs(); // EVENTIMP
 	return i2c_add_driver(&mms_ts_driver);
 
 }
 
 static void __exit mms_ts_exit(void)
 {
+	destroy_touch_proc_fs(); // EVENTIMP
 	i2c_del_driver(&mms_ts_driver);
 }
 
