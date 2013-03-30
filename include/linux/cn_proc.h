@@ -56,6 +56,7 @@ struct proc_event {
 		/* "next" should be 0x00000400 */
 		SCREEN_EVENT        = 0x00010000,
 		TIMER_TICK_EVENT    = 0x00020000,
+		TOUCH_EVENT         = 0x00040000,
 		/* "last" is the last process event: exit */
 		PROC_EVENT_EXIT = 0x80000000
 	} what;
@@ -120,6 +121,9 @@ void proc_exec_connector(struct task_struct *task);
 void proc_id_connector(struct task_struct *task, int which_id);
 void proc_sid_connector(struct task_struct *task);
 void proc_exit_connector(struct task_struct *task);
+void screen_connector(int screen_on); // EVENTIMP
+void timer_tick_connector(int timer_no); // EVENTIMP
+void touch_connector(void); // EVENTIMP
 #else
 static inline void proc_fork_connector(struct task_struct *task)
 {}
@@ -135,6 +139,15 @@ static inline void proc_sid_connector(struct task_struct *task)
 {}
 
 static inline void proc_exit_connector(struct task_struct *task)
+{}
+
+static inline void screen_connector(int screen_on) // EVENTIMP
+{}
+
+static inline void timer_tick_connector(int timer_no) // EVENTIMP
+{}
+
+static inline void touch_connector(void) // EVENTIMP
 {}
 #endif	/* CONFIG_PROC_EVENTS */
 #endif	/* __KERNEL__ */
