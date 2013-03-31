@@ -20,6 +20,7 @@
 #include <linux/syscalls.h> /* sys_sync */
 #include <linux/wakelock.h>
 #include <linux/workqueue.h>
+#include <linux/cn_proc.h> // EVENTIMP
 #ifdef CONFIG_ZRAM_FOR_ANDROID
 #include <asm/atomic.h>
 #endif /* CONFIG_ZRAM_FOR_ANDROID */
@@ -118,6 +119,8 @@ static void early_suspend(struct work_struct *work)
 		goto abort;
 	}
 
+	screen_connector(0); // EVENTIMP
+
 	if (debug_mask & DEBUG_SUSPEND)
 		pr_info("early_suspend: call handlers\n");
 	list_for_each_entry(pos, &early_suspend_handlers, link) {
@@ -182,6 +185,9 @@ static void late_resume(struct work_struct *work)
 	}
 	if (debug_mask & DEBUG_SUSPEND)
 		pr_info("late_resume: done\n");
+
+	screen_connector(1); // EVENTIMP
+
 abort:
 	mutex_unlock(&early_suspend_lock);
 
