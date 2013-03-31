@@ -3233,21 +3233,24 @@ static int touch_happen_read(char *page, char **start, off_t off, int count, int
 
 static int touch_happen_write(struct file *file, const char __user *buffer, unsigned long count, void *data) // EVENTIMP
 {
-	char buff;
+	char buff[16];
+
+	if(count > 15)
+		count = 15;
 
 	// write data to buffer
-	if(copy_from_user(&buff, buffer, 1))
+	if(copy_from_user(buff, buffer, count))
 	{
 		printk(KERN_INFO "%s: copy_from_user failed\n", MMS_TS_PROCFS_NAME);
 		return -EFAULT;
 	}
 
-	if(buff == '0')
+	if(buff[0] == '0')
 		touch_happen = 0;
 	else
 		touch_happen = 1;
 
-	return 1;
+	return count;
 }
 
 static void init_touch_proc_fs(void) // EVENTIMP
